@@ -1,28 +1,37 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Res } from '@nestjs/common';
+import { Response } from 'express';
 
 @Controller('contacts')
 export class ContactsController {
   private readonly contacts = [
     {
-      id: 1718385639086,
+      _id: 1718385639086,
       name: 'test',
       email: 'test@test.com',
     },
     {
-      id: 1718385653653,
+      _id: 1718385653653,
       name: 'Sasha',
       email: 'sasha@test.com',
     },
   ];
   @Post()
-  createContact(@Body() body: any): object {
-    const newContact = { id: Date.now(), ...body };
+  createContact(@Body() body: any, @Res() res: Response): object {
+    const newContact = { _id: Date.now(), ...body };
     this.contacts.push(newContact);
-    return {
+    if (!newContact) {
+      return res.status(500).json({
+        status: 500,
+        message: 'Something went wrong.',
+        data: newContact,
+      });
+    }
+
+    return res.status(201).json({
       status: 201,
       message: 'Successfully added new contact!',
       data: newContact,
-    };
+    });
   }
 
   @Get()
@@ -31,9 +40,9 @@ export class ContactsController {
   }
 
   @Get(':id')
-  getContactById(@Param() params: any) {
-    const parsedId = parseInt(params.id);
-    const contact = this.contacts.find((x: any) => x.id === parsedId);
+  getContactById(@Param('id') id: string) {
+    const parsedId = parseInt(id);
+    const contact = this.contacts.find((x: any) => x._id === parsedId);
     return contact;
   }
 }
